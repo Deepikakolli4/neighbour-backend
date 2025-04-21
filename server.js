@@ -40,6 +40,9 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Server error' });
 });
+app.get('/', (req, res) => {  
+  console.log('Welcome to the API');
+});
 
 // Start the server
 const PORT = process.env.PORT || 8000;
