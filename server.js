@@ -40,6 +40,9 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Server error' });
 });
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome' });
+}); 
 app.get('/api', (req, res) => {
   res.json({ message: 'Welcome to the API' });
 }); 

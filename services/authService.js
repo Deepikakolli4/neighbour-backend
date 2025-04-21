@@ -8,32 +8,43 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 // Signup
-router.post('/signup', async (req, res) => {
+router.signupService = async (username, email, password, role) => {
   try {
-    console.log('Signup request body:', req.body); // Log the request body for debugging
-
-    const { username, email, password, role } = req.body;
-
-    // Validate input
-    if (!username || !email || !password || !role) {
-      return res.status(400).json({ message: 'All fields are required' });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new Error('User already exists');
     }
 
-    // Ensure role is valid
-    const validRoles = ['member', 'admin'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: `Invalid role. Valid roles are: ${validRoles.join(', ')}` });
-    }
+    // Hash the password
+    const encryptedPassword = await bcrypt.hash(password, 10);
 
-    // Call the signup service
-    const response = await authService.signupService(username, email, password, role);
+    // Create user object
+    const newUser = new User({
+      username,
+      email,
+      password: encryptedPassword,
+      role
+    });
 
-    res.status(201).json(response);
-  } catch (err) {
-    console.error('Signup error:', err); // Log the full error object for debugging
-    res.status(500).json({ message: 'Internal server error', error: err.message });
+    // Save to DB
+    const savedUser = await newUser.save();
+
+    // Return only public data
+    return {
+      message: 'User registered successfully',
+      user: {
+        id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        role: savedUser.role
+      }
+    };
+  } catch (error) {
+    console.error('SignupService Error:', error);
+    throw error; // Let the controller handle the response
   }
-});
+};
 
 // Login
 router.post('/login', async (req, res) => {
